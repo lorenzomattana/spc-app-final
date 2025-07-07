@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Play, Clock, Flame, Target, ChevronRight, Award } from 'lucide-react-native';
+import { Play, Clock, Flame, Target, ChevronRight, Award, Dumbbell } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
