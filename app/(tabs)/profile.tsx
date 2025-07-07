@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, Bell, Shield, HelpCircle, LogOut, Edit, Camera, Award, Target } from 'lucide-react-native';
+import { Settings, Bell, Shield, CircleHelp as HelpCircle, LogOut, CreditCard as Edit, Camera, Award, Target } from 'lucide-react-native';
 
 interface UserStats {
   totalWorkouts: number;
