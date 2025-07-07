@@ -1,191 +1,230 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Dumbbell, Plus, Calendar, Clock, Target, Image as ImageIcon } from 'lucide-react-native';
-
-interface Exercise {
-  id: string;
-  name: string;
-  muscle: string;
-  sets: number;
-  reps: string;
-  weight?: string;
-}
+import { Search, Filter, Play, Clock, Flame, Users } from 'lucide-react-native';
 
 interface Workout {
   id: string;
-  name: string;
-  program: string;
-  date: string;
+  title: string;
+  instructor: string;
   duration: string;
-  exercises: Exercise[];
+  calories: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  category: string;
+  image: string;
+  participants: number;
+  rating: number;
 }
 
-export default function Workouts() {
-  const [workouts, setWorkouts] = useState<Workout[]>([
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export default function WorkoutsScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories: Category[] = [
+    { id: '1', name: 'All', icon: '🏃', color: '#6366f1' },
+    { id: '2', name: 'HIIT', icon: '⚡', color: '#ef4444' },
+    { id: '3', name: 'Strength', icon: '💪', color: '#10b981' },
+    { id: '4', name: 'Yoga', icon: '🧘', color: '#8b5cf6' },
+    { id: '5', name: 'Cardio', icon: '❤️', color: '#f59e0b' },
+    { id: '6', name: 'Pilates', icon: '🤸', color: '#ec4899' },
+  ];
+
+  const workouts: Workout[] = [
     {
       id: '1',
-      name: 'Push Day',
-      program: 'Push Pull Legs',
-      date: '2024-01-15',
-      duration: '75 min',
-      exercises: [
-        { id: '1', name: 'Panca Piana', muscle: 'Petto', sets: 4, reps: '8-10', weight: '80kg' },
-        { id: '2', name: 'Spinte Manubri', muscle: 'Petto', sets: 3, reps: '12-15', weight: '30kg' },
-        { id: '3', name: 'Push-up', muscle: 'Petto', sets: 3, reps: '15-20' },
-      ],
+      title: 'Full Body HIIT Blast',
+      instructor: 'Sarah Johnson',
+      duration: '25 min',
+      calories: '300 cal',
+      difficulty: 'Intermediate',
+      category: 'HIIT',
+      image: 'https://images.pexels.com/photos/416778/pexels-photo-416778.jpeg?auto=compress&cs=tinysrgb&w=800',
+      participants: 1247,
+      rating: 4.8,
     },
-  ]);
+    {
+      id: '2',
+      title: 'Upper Body Strength',
+      instructor: 'Mike Chen',
+      duration: '45 min',
+      calories: '280 cal',
+      difficulty: 'Advanced',
+      category: 'Strength',
+      image: 'https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg?auto=compress&cs=tinysrgb&w=800',
+      participants: 892,
+      rating: 4.9,
+    },
+    {
+      id: '3',
+      title: 'Morning Yoga Flow',
+      instructor: 'Emma Wilson',
+      duration: '30 min',
+      calories: '150 cal',
+      difficulty: 'Beginner',
+      category: 'Yoga',
+      image: 'https://images.pexels.com/photos/3822622/pexels-photo-3822622.jpeg?auto=compress&cs=tinysrgb&w=800',
+      participants: 2156,
+      rating: 4.7,
+    },
+    {
+      id: '4',
+      title: 'Cardio Dance Party',
+      instructor: 'Lisa Rodriguez',
+      duration: '35 min',
+      calories: '320 cal',
+      difficulty: 'Intermediate',
+      category: 'Cardio',
+      image: 'https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg?auto=compress&cs=tinysrgb&w=800',
+      participants: 1543,
+      rating: 4.6,
+    },
+    {
+      id: '5',
+      title: 'Core Pilates Power',
+      instructor: 'Anna Thompson',
+      duration: '20 min',
+      calories: '180 cal',
+      difficulty: 'Intermediate',
+      category: 'Pilates',
+      image: 'https://images.pexels.com/photos/3984340/pexels-photo-3984340.jpeg?auto=compress&cs=tinysrgb&w=800',
+      participants: 756,
+      rating: 4.8,
+    },
+    {
+      id: '6',
+      title: 'Leg Day Destroyer',
+      instructor: 'David Kim',
+      duration: '40 min',
+      calories: '350 cal',
+      difficulty: 'Advanced',
+      category: 'Strength',
+      image: 'https://images.pexels.com/photos/1431282/pexels-photo-1431282.jpeg?auto=compress&cs=tinysrgb&w=800',
+      participants: 634,
+      rating: 4.9,
+    },
+  ];
 
-  const [showModal, setShowModal] = useState(false);
-  const [newWorkout, setNewWorkout] = useState({
-    name: '',
-    program: '',
-    duration: '',
-  });
-
-  const addWorkout = () => {
-    if (newWorkout.name && newWorkout.program) {
-      const workout: Workout = {
-        id: Date.now().toString(),
-        name: newWorkout.name,
-        program: newWorkout.program,
-        date: new Date().toISOString().split('T')[0],
-        duration: newWorkout.duration || '0 min',
-        exercises: [],
-      };
-      
-      setWorkouts(prev => [workout, ...prev]);
-      setNewWorkout({ name: '', program: '', duration: '' });
-      setShowModal(false);
-    } else {
-      Alert.alert('Errore', 'Inserisci almeno nome e programma');
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Beginner': return '#10b981';
+      case 'Intermediate': return '#f59e0b';
+      case 'Advanced': return '#ef4444';
+      default: return '#6b7280';
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  };
+  const filteredWorkouts = workouts.filter(workout => {
+    const matchesSearch = workout.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         workout.instructor.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || workout.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>I Miei Allenamenti</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowModal(true)}>
-          <Plus size={24} color="#fff" />
+        <Text style={styles.title}>Workouts</Text>
+        <TouchableOpacity style={styles.filterButton}>
+          <Filter size={24} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        {workouts.map((workout) => (
-          <View key={workout.id} style={styles.workoutCard}>
-            <View style={styles.workoutHeader}>
-              <View style={styles.workoutInfo}>
-                <Text style={styles.workoutName}>{workout.name}</Text>
-                <Text style={styles.workoutProgram}>{workout.program}</Text>
-              </View>
-              <View style={styles.workoutStats}>
-                <View style={styles.statItem}>
-                  <Calendar size={16} color="#ff6b35" />
-                  <Text style={styles.statText}>{formatDate(workout.date)}</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Clock size={16} color="#ff6b35" />
-                  <Text style={styles.statText}>{workout.duration}</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Target size={16} color="#ff6b35" />
-                  <Text style={styles.statText}>{workout.exercises.length} esercizi</Text>
-                </View>
-              </View>
-            </View>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Search size={20} color="#9ca3af" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search workouts..."
+            placeholderTextColor="#9ca3af"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
 
-            {workout.exercises.length > 0 && (
-              <View style={styles.exercisesList}>
-                {workout.exercises.map((exercise) => (
-                  <View key={exercise.id} style={styles.exerciseItem}>
-                    <View style={styles.exerciseInfo}>
-                      <Text style={styles.exerciseName}>{exercise.name}</Text>
-                      <Text style={styles.exerciseMuscle}>{exercise.muscle}</Text>
-                    </View>
-                    <Text style={styles.exerciseDetails}>
-                      {exercise.sets} x {exercise.reps}
-                      {exercise.weight && ` - ${exercise.weight}`}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            <View style={styles.workoutActions}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Dumbbell size={20} color="#ff6b35" />
-                <Text style={styles.actionText}>Modifica</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <ImageIcon size={20} color="#ff6b35" />
-                <Text style={styles.actionText}>Aggiungi Media</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      {/* Categories */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category.name && styles.categoryButtonActive,
+            ]}
+            onPress={() => setSelectedCategory(category.name)}
+          >
+            <Text style={styles.categoryIcon}>{category.icon}</Text>
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategory === category.name && styles.categoryTextActive,
+              ]}
+            >
+              {category.name}
+            </Text>
+          </TouchableOpacity>
         ))}
       </ScrollView>
 
-      <Modal
-        visible={showModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Nuovo Allenamento</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Nome allenamento"
-              placeholderTextColor="#888"
-              value={newWorkout.name}
-              onChangeText={(text) => setNewWorkout(prev => ({ ...prev, name: text }))}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Programma"
-              placeholderTextColor="#888"
-              value={newWorkout.program}
-              onChangeText={(text) => setNewWorkout(prev => ({ ...prev, program: text }))}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Durata (opzionale)"
-              placeholderTextColor="#888"
-              value={newWorkout.duration}
-              onChangeText={(text) => setNewWorkout(prev => ({ ...prev, duration: text }))}
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Annulla</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]} 
-                onPress={addWorkout}
-              >
-                <Text style={styles.saveButtonText}>Salva</Text>
+      {/* Workouts List */}
+      <ScrollView style={styles.workoutsList} showsVerticalScrollIndicator={false}>
+        {filteredWorkouts.map((workout) => (
+          <TouchableOpacity key={workout.id} style={styles.workoutCard}>
+            <Image source={{ uri: workout.image }} style={styles.workoutImage} />
+            <View style={styles.workoutOverlay}>
+              <TouchableOpacity style={styles.playButton}>
+                <Play size={16} color="#ffffff" fill="#ffffff" />
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+            
+            <View style={styles.workoutContent}>
+              <View style={styles.workoutHeader}>
+                <View style={styles.workoutInfo}>
+                  <Text style={styles.workoutTitle}>{workout.title}</Text>
+                  <Text style={styles.workoutInstructor}>by {workout.instructor}</Text>
+                </View>
+                <View style={styles.ratingContainer}>
+                  <Text style={styles.rating}>⭐ {workout.rating}</Text>
+                </View>
+              </View>
+
+              <View style={styles.workoutMeta}>
+                <View style={styles.metaItem}>
+                  <Clock size={16} color="#9ca3af" />
+                  <Text style={styles.metaText}>{workout.duration}</Text>
+                </View>
+                <View style={styles.metaItem}>
+                  <Flame size={16} color="#9ca3af" />
+                  <Text style={styles.metaText}>{workout.calories}</Text>
+                </View>
+                <View style={styles.metaItem}>
+                  <Users size={16} color="#9ca3af" />
+                  <Text style={styles.metaText}>{workout.participants.toLocaleString()}</Text>
+                </View>
+              </View>
+
+              <View style={styles.workoutFooter}>
+                <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyColor(workout.difficulty) + '20' }]}>
+                  <Text style={[styles.difficultyText, { color: getDifficultyColor(workout.difficulty) }]}>
+                    {workout.difficulty}
+                  </Text>
+                </View>
+                <View style={styles.categoryBadge}>
+                  <Text style={styles.categoryBadgeText}>{workout.category}</Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -199,165 +238,183 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: '#fff',
+    color: '#ffffff',
   },
-  addButton: {
-    backgroundColor: '#ff6b35',
+  filterButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    backgroundColor: '#1a1a1a',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
   },
-  scrollView: {
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  searchInput: {
     flex: 1,
-    padding: 20,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#ffffff',
+  },
+  categoriesContainer: {
+    paddingLeft: 20,
+    marginBottom: 20,
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  categoryButtonActive: {
+    backgroundColor: '#6366f1',
+    borderColor: '#6366f1',
+  },
+  categoryIcon: {
+    fontSize: 16,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#9ca3af',
+  },
+  categoryTextActive: {
+    color: '#ffffff',
+  },
+  workoutsList: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
   workoutCard: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 15,
+    borderRadius: 20,
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  workoutImage: {
+    width: '100%',
+    height: 200,
+  },
+  workoutOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  playButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(99, 102, 241, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  workoutContent: {
     padding: 20,
-    marginBottom: 15,
   },
   workoutHeader: {
-    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   workoutInfo: {
-    marginBottom: 10,
+    flex: 1,
   },
-  workoutName: {
-    fontSize: 20,
+  workoutTitle: {
+    fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: '#fff',
-    marginBottom: 5,
+    color: '#ffffff',
+    marginBottom: 4,
   },
-  workoutProgram: {
+  workoutInstructor: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#ff6b35',
+    color: '#9ca3af',
   },
-  workoutStats: {
+  ratingContainer: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  rating: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+  },
+  workoutMeta: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 20,
+    marginBottom: 16,
   },
-  statItem: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
   },
-  statText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#888',
+  metaText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#9ca3af',
   },
-  exercisesList: {
-    marginBottom: 15,
-  },
-  exerciseItem: {
+  workoutFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
-  exerciseInfo: {
-    flex: 1,
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#fff',
-    marginBottom: 3,
-  },
-  exerciseMuscle: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: '#888',
-  },
-  exerciseDetails: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#ff6b35',
-  },
-  workoutActions: {
-    flexDirection: 'row',
-    gap: 15,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2a2a2a',
-    paddingVertical: 12,
+  difficultyBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    gap: 8,
   },
-  actionText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#ff6b35',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 15,
-    padding: 20,
-    width: '90%',
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    color: '#fff',
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 15,
-    marginTop: 10,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#333',
-  },
-  saveButton: {
-    backgroundColor: '#ff6b35',
-  },
-  cancelButtonText: {
-    color: '#fff',
+  difficultyText: {
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
   },
-  saveButtonText: {
-    color: '#fff',
+  categoryBadge: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  categoryBadgeText: {
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
   },
 });

@@ -1,206 +1,213 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, CreditCard as Edit3, Settings, LogOut, Bell, Shield } from 'lucide-react-native';
-import { useAuth } from '@/contexts/AuthContext';
+import { Settings, Bell, Shield, HelpCircle, LogOut, Edit, Camera, Award, Target } from 'lucide-react-native';
 
-interface UserProfile {
-  phone: string;
-  goals: string;
-  experience: string;
-  notifications: boolean;
+interface UserStats {
+  totalWorkouts: number;
+  totalCalories: number;
+  currentStreak: number;
+  joinDate: string;
 }
 
-export default function Profile() {
-  const { user, signOut } = useAuth();
-  
-  const [profile, setProfile] = useState<UserProfile>({
-    phone: '',
-    goals: 'Perdere peso e tonificare',
-    experience: 'Intermedio',
-    notifications: true,
-  });
+interface Setting {
+  id: string;
+  title: string;
+  description?: string;
+  icon: React.ReactNode;
+  type: 'toggle' | 'navigation';
+  value?: boolean;
+  onPress?: () => void;
+}
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState(profile);
+export default function ProfileScreen() {
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(true);
 
-  const handleSave = () => {
-    setProfile(editedProfile);
-    setIsEditing(false);
-    Alert.alert('Successo', 'Profilo aggiornato con successo!');
+  const userStats: UserStats = {
+    totalWorkouts: 127,
+    totalCalories: 15420,
+    currentStreak: 12,
+    joinDate: 'January 2024',
   };
 
-  const handleCancel = () => {
-    setEditedProfile(profile);
-    setIsEditing(false);
-  };
+  const settings: Setting[] = [
+    {
+      id: '1',
+      title: 'Notifications',
+      description: 'Workout reminders and achievements',
+      icon: <Bell size={20} color="#6366f1" />,
+      type: 'toggle',
+      value: notificationsEnabled,
+      onPress: () => setNotificationsEnabled(!notificationsEnabled),
+    },
+    {
+      id: '2',
+      title: 'Privacy & Security',
+      description: 'Manage your data and privacy settings',
+      icon: <Shield size={20} color="#6366f1" />,
+      type: 'navigation',
+      onPress: () => Alert.alert('Privacy', 'Privacy settings coming soon'),
+    },
+    {
+      id: '3',
+      title: 'Help & Support',
+      description: 'Get help and contact support',
+      icon: <HelpCircle size={20} color="#6366f1" />,
+      type: 'navigation',
+      onPress: () => Alert.alert('Help', 'Help center coming soon'),
+    },
+    {
+      id: '4',
+      title: 'App Settings',
+      description: 'Customize your app experience',
+      icon: <Settings size={20} color="#6366f1" />,
+      type: 'navigation',
+      onPress: () => Alert.alert('Settings', 'App settings coming soon'),
+    },
+  ];
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Sei sicuro di voler uscire?',
+      'Sign Out',
+      'Are you sure you want to sign out?',
       [
-        { text: 'Annulla', style: 'cancel' },
-        { text: 'Esci', style: 'destructive', onPress: signOut },
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: () => console.log('Logout') },
       ]
     );
   };
 
-  const toggleNotifications = () => {
-    setProfile(prev => ({
-      ...prev,
-      notifications: !prev.notifications
-    }));
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Profilo</Text>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => setIsEditing(!isEditing)}
-        >
-          <Edit3 size={20} color="#ff6b35" />
-        </TouchableOpacity>
-      </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Profile</Text>
+          <TouchableOpacity style={styles.editButton}>
+            <Edit size={20} color="#6366f1" />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView style={styles.scrollView}>
+        {/* Profile Info */}
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            {user?.picture ? (
-              <Image source={{ uri: user.picture }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatar}>
-                <User size={40} color="#ff6b35" />
-              </View>
-            )}
-            <Text style={styles.userName}>{user?.name || 'Utente'}</Text>
-            <Text style={styles.userEmail}>{user?.email || ''}</Text>
+            <Image
+              source={{ uri: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200' }}
+              style={styles.avatar}
+            />
+            <TouchableOpacity style={styles.cameraButton}>
+              <Camera size={16} color="#ffffff" />
+            </TouchableOpacity>
           </View>
+          <Text style={styles.userName}>Alex Johnson</Text>
+          <Text style={styles.userEmail}>alex.johnson@email.com</Text>
+          <Text style={styles.joinDate}>Member since {userStats.joinDate}</Text>
+        </View>
 
-          <View style={styles.infoCard}>
-            <Text style={styles.sectionTitle}>Informazioni Personali</Text>
-            
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Nome</Text>
-              <Text style={styles.infoValue}>{user?.name || 'Non disponibile'}</Text>
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <Target size={24} color="#6366f1" />
             </View>
-
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user?.email || 'Non disponibile'}</Text>
+            <Text style={styles.statValue}>{userStats.totalWorkouts}</Text>
+            <Text style={styles.statLabel}>Total Workouts</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <Award size={24} color="#ef4444" />
             </View>
-
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Telefono</Text>
-              {isEditing ? (
-                <TextInput
-                  style={styles.input}
-                  value={editedProfile.phone}
-                  onChangeText={(text) => setEditedProfile(prev => ({ ...prev, phone: text }))}
-                  keyboardType="phone-pad"
-                  placeholder="Inserisci numero di telefono"
-                  placeholderTextColor="#888"
-                />
-              ) : (
-                <Text style={styles.infoValue}>{profile.phone || 'Non inserito'}</Text>
-              )}
+            <Text style={styles.statValue}>{userStats.totalCalories.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>Calories Burned</Text>
+          </View>
+          <View style={styles.statCard}>
+            <View style={styles.statIcon}>
+              <Award size={24} color="#10b981" />
             </View>
-
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Obiettivi</Text>
-              {isEditing ? (
-                <TextInput
-                  style={styles.input}
-                  value={editedProfile.goals}
-                  onChangeText={(text) => setEditedProfile(prev => ({ ...prev, goals: text }))}
-                  placeholder="I tuoi obiettivi fitness"
-                  placeholderTextColor="#888"
-                />
-              ) : (
-                <Text style={styles.infoValue}>{profile.goals}</Text>
-              )}
-            </View>
-
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Esperienza</Text>
-              {isEditing ? (
-                <TextInput
-                  style={styles.input}
-                  value={editedProfile.experience}
-                  onChangeText={(text) => setEditedProfile(prev => ({ ...prev, experience: text }))}
-                  placeholder="Livello di esperienza"
-                  placeholderTextColor="#888"
-                />
-              ) : (
-                <Text style={styles.infoValue}>{profile.experience}</Text>
-              )}
-            </View>
-
-            {isEditing && (
-              <View style={styles.editActions}>
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-                  <Text style={styles.cancelButtonText}>Annulla</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                  <Text style={styles.saveButtonText}>Salva</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            <Text style={styles.statValue}>{userStats.currentStreak}</Text>
+            <Text style={styles.statLabel}>Day Streak</Text>
           </View>
         </View>
 
+        {/* Achievements */}
+        <View style={styles.achievementsSection}>
+          <Text style={styles.sectionTitle}>Recent Achievements</Text>
+          <View style={styles.achievementsList}>
+            <View style={styles.achievementItem}>
+              <Text style={styles.achievementEmoji}>🔥</Text>
+              <View style={styles.achievementInfo}>
+                <Text style={styles.achievementTitle}>Week Warrior</Text>
+                <Text style={styles.achievementDescription}>Completed 5 workouts this week</Text>
+              </View>
+              <Text style={styles.achievementDate}>2 days ago</Text>
+            </View>
+            <View style={styles.achievementItem}>
+              <Text style={styles.achievementEmoji}>💪</Text>
+              <View style={styles.achievementInfo}>
+                <Text style={styles.achievementTitle}>Strength Master</Text>
+                <Text style={styles.achievementDescription}>Completed 10 strength workouts</Text>
+              </View>
+              <Text style={styles.achievementDate}>1 week ago</Text>
+            </View>
+            <View style={styles.achievementItem}>
+              <Text style={styles.achievementEmoji}>⚡</Text>
+              <View style={styles.achievementInfo}>
+                <Text style={styles.achievementTitle}>Calorie Crusher</Text>
+                <Text style={styles.achievementDescription}>Burned 1000 calories in one day</Text>
+              </View>
+              <Text style={styles.achievementDate}>2 weeks ago</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Settings */}
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>Impostazioni</Text>
-
-          <TouchableOpacity style={styles.settingItem} onPress={toggleNotifications}>
-            <View style={styles.settingLeft}>
-              <Bell size={20} color="#ff6b35" />
-              <Text style={styles.settingText}>Notifiche</Text>
-            </View>
-            <View style={[
-              styles.toggle,
-              profile.notifications && styles.toggleActive
-            ]}>
-              <View style={[
-                styles.toggleButton,
-                profile.notifications && styles.toggleButtonActive
-              ]} />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Shield size={20} color="#ff6b35" />
-              <Text style={styles.settingText}>Privacy</Text>
-            </View>
-            <Text style={styles.settingValue}>›</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <Settings size={20} color="#ff6b35" />
-              <Text style={styles.settingText}>Preferenze</Text>
-            </View>
-            <Text style={styles.settingValue}>›</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Settings</Text>
+          <View style={styles.settingsList}>
+            {settings.map((setting) => (
+              <TouchableOpacity
+                key={setting.id}
+                style={styles.settingItem}
+                onPress={setting.onPress}
+                disabled={setting.type === 'toggle'}
+              >
+                <View style={styles.settingIcon}>
+                  {setting.icon}
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>{setting.title}</Text>
+                  {setting.description && (
+                    <Text style={styles.settingDescription}>{setting.description}</Text>
+                  )}
+                </View>
+                {setting.type === 'toggle' ? (
+                  <Switch
+                    value={setting.value}
+                    onValueChange={setting.onPress}
+                    trackColor={{ false: '#2a2a2a', true: '#6366f1' }}
+                    thumbColor="#ffffff"
+                  />
+                ) : (
+                  <Text style={styles.settingArrow}>›</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <View style={styles.actionSection}>
+        {/* Logout */}
+        <View style={styles.logoutSection}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <LogOut size={20} color="#ef4444" />
-            <Text style={styles.logoutText}>Esci</Text>
+            <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Personal Trainer App v1.0.0
-          </Text>
-          <Text style={styles.footerText}>
-            by Simone Pagnottoni
-          </Text>
+        {/* App Info */}
+        <View style={styles.appInfo}>
+          <Text style={styles.appVersion}>FitTracker v1.0.0</Text>
+          <Text style={styles.appCopyright}>© 2024 FitTracker. All rights reserved.</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -212,198 +219,233 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0a0a0a',
   },
+  scrollView: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: '#fff',
+    color: '#ffffff',
   },
   editButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1a1a1a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#6366f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: '#0a0a0a',
+  },
+  userName: {
+    fontSize: 24,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#9ca3af',
+    marginBottom: 8,
+  },
+  joinDate: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6b7280',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 30,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  statIcon: {
+    marginBottom: 12,
+  },
+  statValue: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
+  achievementsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+    marginBottom: 16,
+  },
+  achievementsList: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    overflow: 'hidden',
+  },
+  achievementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+  },
+  achievementEmoji: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  achievementInfo: {
+    flex: 1,
+  },
+  achievementTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  achievementDescription: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#9ca3af',
+  },
+  achievementDate: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#6b7280',
+  },
+  settingsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
+  },
+  settingsList: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    overflow: 'hidden',
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+  },
+  settingIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: '#2a2a2a',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 16,
   },
-  scrollView: {
+  settingContent: {
     flex: 1,
   },
-  profileSection: {
-    padding: 20,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#1a1a1a',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  avatarImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-  },
-  userName: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
-    color: '#fff',
-    marginBottom: 5,
-  },
-  userEmail: {
+  settingTitle: {
     fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#888',
-  },
-  infoCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 15,
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    color: '#fff',
-    marginBottom: 20,
+    color: '#ffffff',
+    marginBottom: 2,
   },
-  infoItem: {
-    marginBottom: 20,
-  },
-  infoLabel: {
+  settingDescription: {
     fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#888',
-    marginBottom: 8,
-  },
-  infoValue: {
-    fontSize: 16,
     fontFamily: 'Inter-Regular',
-    color: '#fff',
+    color: '#9ca3af',
   },
-  input: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
+  settingArrow: {
+    fontSize: 20,
+    color: '#6b7280',
   },
-  editActions: {
-    flexDirection: 'row',
-    gap: 15,
-    marginTop: 20,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#333',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#ff6b35',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontFamily: 'Inter-SemiBold',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontFamily: 'Inter-SemiBold',
-  },
-  settingsSection: {
-    backgroundColor: '#1a1a1a',
-    margin: 20,
-    borderRadius: 15,
-    padding: 20,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  settingText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: '#fff',
-  },
-  settingValue: {
-    fontSize: 18,
-    fontFamily: 'Inter-Regular',
-    color: '#888',
-  },
-  toggle: {
-    width: 50,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleActive: {
-    backgroundColor: '#ff6b35',
-  },
-  toggleButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    alignSelf: 'flex-start',
-  },
-  toggleButtonActive: {
-    alignSelf: 'flex-end',
-  },
-  actionSection: {
-    padding: 20,
+  logoutSection: {
+    paddingHorizontal: 20,
+    marginBottom: 30,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1a1a1a',
-    paddingVertical: 15,
-    borderRadius: 10,
-    gap: 10,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
   },
   logoutText: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#ef4444',
   },
-  footer: {
+  appInfo: {
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
   },
-  footerText: {
+  appVersion: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  appCopyright: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#666',
+    color: '#6b7280',
     textAlign: 'center',
   },
 });
